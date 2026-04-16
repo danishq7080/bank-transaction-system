@@ -1,95 +1,162 @@
-import React, { useState } from "react";
-import API from "../services/api";
-import { useNavigate } from "react-router-dom";
-import "../App.css";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
+import { useApi } from '../hooks/useApi';
+import LoadingSpinner from '../components/LoadingSpinner';
+import '../App.css';
 
 function Login() {
+    const navigate = useNavigate();
+    const { login } = useContext(AuthContext);
+    const { loading, error, request } = useApi();
 
-  const navigate = useNavigate();
+    const [formData, setFormData] = useState({
+        email: '',
+        password: '',
+    });
 
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+    const [validationErrors, setValidationErrors] = useState({});
+    const [submitError, setSubmitError] = useState('');
 
-  // ✅ NEW STATE FOR MESSAGE
-  const [message, setMessage] = useState("");
-  const [type, setType] = useState(""); // success / error
+    const validateForm = () => {
+        const errors = {};
 
-  const handleLogin = async () => {
+        if (!formData.email) {
+            errors.email = 'Email is required';
+        } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+            errors.email = 'Email is invalid';
+        }
 
-    try {
+        if (!formData.password) {
+            errors.password = 'Password is required';
+        }
 
-      const formData = new URLSearchParams();
-      formData.append("username", email);
-      formData.append("password", password);
+        return errors;
+    };
 
-      const res = await API.post("/login", formData);
+    const handleSubmit = async (e) => {
+        e.preventDefault();
 
-      localStorage.setItem("token", res.data.access_token);
+        const errors = validateForm();
+        if (Object.keys(errors).length > 0) {
+            setValidationErrors(errors);
+            return;
+        }
 
-      // ✅ SUCCESS MESSAGE
-      setMessage("Login Successful");
-      setType("success");
+        setValidationErrors({});
+        setSubmitError('');
 
-      setTimeout(() => {
-        navigate("/dashboard");
-      }, 1000);
+        try {
+            const formBody = new URLSearchParams();
+            formBody.append('username', formData.email);
+            formBody.append('password', formData.password);
 
-    } catch (error) {
+            const response = await request('POST', '/login', formBody, {
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
 
-      // ✅ ERROR MESSAGE
-      setMessage("Invalid email or password");
-      setType("error");
+            login({ email: formData.email }, response.access_token);
+            navigate('/dashboard');
 
-    }
+        } catch (err) {
+            setSubmitError(error);
+        }
+    };
 
-  };
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }));
+        // Clear error for this field
+        if (validationErrors[name]) {
+            setValidationErrors(prev => ({
+                ...prev,
+                [name]: ''
+            }));
+        }
+    };
 
-  return (
-    <div className="container">
+    return (
+        <div className="container">
+            <div className="card">
+                <h2 style={{ textAlign: "center" }}>Login</h2>
 
-      <div className="card">
+                {submitError && (
+                    <div className="alert error" role="alert">
+                        {submitError}
+                    </div>
+                )}
 
-        <h2 style={{ textAlign: "center" }}>Login</h2>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label htmlFor="email">Email</label>
+                        <input
+                            id="email"
+                            type="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            value={formData.email}
+                            onChange={handleChange}
+                            aria-invalid={!!validationErrors.email}
+                            aria-describedby={validationErrors.email ? "email-error" : undefined}
+                            disabled={loading}
+                        />
+                        {validationErrors.email && (
+                            <span id="email-error" className="error-text">
+                                {validationErrors.email}
+                            </span>
+                        )}
+                    </div>
 
-        {/* ✅ MESSAGE UI */}
-        {message && (
-          <div className={`alert ${type}`}>
-            {message}
-          </div>
-        )}
+                    <div className="form-group">
+                        <label htmlFor="password">Password</label>
+                        <input
+                            id="password"
+                            type="password"
+                            name="password"
+                            placeholder="Enter your password"
+                            value={formData.password}
+                            onChange={handleChange}
+                            aria-invalid={!!validationErrors.password}
+                            aria-describedby={validationErrors.password ? "password-error" : undefined}
+                            disabled={loading}
+                        />
+                        {validationErrors.password && (
+                            <span id="password-error" className="error-text">
+                                {validationErrors.password}
+                            </span>
+                        )}
+                    </div>
 
-        <input
-          placeholder="Enter Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-        />
+                    <button
+                        type="submit"
+                        className="btn-primary"
+                        disabled={loading}
+                    >
+                        {loading ? 'Logging in...' : 'Login'}
+                    </button>
+                </form>
 
-        <input
-          type="password"
-          placeholder="Enter Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-        />
+                <p style={{ textAlign: "center", marginTop: "15px" }}>
+                    Don&apos;t have an account?
+                </p>
 
-        <button className="btn-primary" onClick={handleLogin}>
-          Login
-        </button>
-
-        <p style={{ textAlign: "center", marginTop: "15px" }}>
-          Don't have an account?
-        </p>
-
-        <button
-          className="btn-dark"
-          onClick={() => navigate("/register")}
-        >
-          Create Account
-        </button>
-
-      </div>
-
-    </div>
-  );
+                <button
+                    type="button"
+                    className="btn-dark"
+                    onClick={() => navigate('/register')}
+                    disabled={loading}
+                >
+                    Create Account
+                </button>
+            </div>
+        </div>
+    );
 }
 
 export default Login;

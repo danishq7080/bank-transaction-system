@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
 import "./Sidebar.css";
 
@@ -19,5 +20,10 @@ function Sidebar({ isOpen, toggleSidebar }) {
     </div>
   );
 }
+
+Sidebar.propTypes = {
+  isOpen: PropTypes.bool.isRequired,
+  toggleSidebar: PropTypes.func.isRequired,
+};
 
 export default Sidebar;

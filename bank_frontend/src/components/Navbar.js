@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { useNavigate } from "react-router-dom";
 
 function Navbar({ toggleSidebar }) {
@@ -52,5 +53,9 @@ function Navbar({ toggleSidebar }) {
     </div>
   );
 }
+
+Navbar.propTypes = {
+  toggleSidebar: PropTypes.func.isRequired,
+};
 
 export default Navbar;

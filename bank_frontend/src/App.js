@@ -1,4 +1,7 @@
+import React from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import ErrorBoundary from "./components/ErrorBoundary";
 
 import Login from "./pages/Login";
 import Register from "./pages/Register";
@@ -13,72 +16,73 @@ import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
   return (
-    <BrowserRouter>
+    <ErrorBoundary>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-      <Routes>
+            {/* Protected Routes */}
+            <Route
+              path="/dashboard"
+              element={
+                <PrivateRoute>
+                  <Dashboard />
+                </PrivateRoute>
+              }
+            />
 
-        {/* Public Routes */}
-        <Route path="/" element={<Login />} />
-        <Route path="/register" element={<Register />} />
+            <Route
+              path="/create-account"
+              element={
+                <PrivateRoute>
+                  <CreateAccount />
+                </PrivateRoute>
+              }
+            />
 
-        {/* Protected Routes */}
-        <Route
-          path="/dashboard"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
+            <Route
+              path="/deposit/:accountNumber"
+              element={
+                <PrivateRoute>
+                  <Deposit />
+                </PrivateRoute>
+              }
+            />
 
-        <Route
-          path="/create-account"
-          element={
-            <PrivateRoute>
-              <CreateAccount />
-            </PrivateRoute>
-          }
-        />
+            <Route
+              path="/withdraw/:accountNumber"
+              element={
+                <PrivateRoute>
+                  <Withdraw />
+                </PrivateRoute>
+              }
+            />
 
-        <Route
-          path="/deposit/:accountNumber"
-          element={
-            <PrivateRoute>
-              <Deposit />
-            </PrivateRoute>
-          }
-        />
+            <Route
+              path="/transfer/:accountNumber"
+              element={
+                <PrivateRoute>
+                  <Transfer />
+                </PrivateRoute>
+              }
+            />
 
-        <Route
-          path="/withdraw/:accountNumber"
-          element={
-            <PrivateRoute>
-              <Withdraw />
-            </PrivateRoute>
-          }
-        />
+            <Route
+              path="/transactions/:accountNumber"
+              element={
+                <PrivateRoute>
+                  <Transactions />
+                </PrivateRoute>
+              }
+            />
 
-        <Route
-          path="/transfer/:accountNumber"
-          element={
-            <PrivateRoute>
-              <Transfer />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/transactions/:accountNumber"
-          element={
-            <PrivateRoute>
-              <Transactions />
-            </PrivateRoute>
-          }
-        />
-
-      </Routes>
-
-    </BrowserRouter>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 
